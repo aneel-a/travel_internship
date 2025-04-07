@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Tours and Travels app like the booking.com',
 }
 
-export default function RootLayout({
+export default function SiteLayout({
   children,
 }: {
   children: React.ReactNode

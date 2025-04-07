@@ -3,16 +3,41 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+// Define the type for a product in the cart
+interface CartItem {
+  title: string;
+  image: string;
+  price: number;
+  quantity?: number; // Optional, will be added in grouping
+}
+
 const CartPage = () => {
-  const [cart, setCart] = useState<any[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
     setCart(storedCart);
   }, []);
 
+  // Group the products by title and count the quantity
+  const groupedCart = cart.reduce((acc: CartItem[], product: CartItem) => {
+    const existingProduct = acc.find((p) => p.title === product.title);
+    if (existingProduct) {
+      existingProduct.quantity! += 1; // Increase quantity for the existing product
+    } else {
+      acc.push({ ...product, quantity: 1 });
+    }
+    return acc;
+  }, []);
+
+  // Flatten grouped items back to the original format for saving to localStorage
+  const flattenCart = groupedCart.flatMap((item) =>
+    Array(item.quantity).fill(item)
+  );
+
   const handleDeleteItem = (index: number) => {
-    const updatedCart = cart.filter((_, i) => i !== index);
+    // Remove the item at the specified index from the cart
+    const updatedCart = flattenCart.filter((_, i) => i !== index);
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
@@ -22,7 +47,11 @@ const CartPage = () => {
     localStorage.removeItem("cart");
   };
 
-  const totalPrice = cart.reduce((acc, product) => acc + product.price, 0);
+  // Calculate the total price by considering the price and quantity of each item
+  const totalPrice = groupedCart.reduce(
+    (acc, product) => acc + product.price * (product.quantity || 1),
+    0
+  );
 
   return (
     <div className="flex flex-col items-center justify-center mb-10 text-gray-800">
@@ -32,10 +61,10 @@ const CartPage = () => {
         <p className="text-lg mt-2">Your cart is empty.</p>
       ) : (
         <div className="mt-4 space-y-4">
-          {cart.map((product, index) => (
+          {groupedCart.map((product, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow-md"
+              className="flex w-[45vw] items-center justify-between p-4 bg-gray-100 rounded-lg shadow-md"
             >
               <div className="flex items-center">
                 <Image
@@ -45,10 +74,16 @@ const CartPage = () => {
                   height={100}
                   className="rounded-lg"
                 />
-                <p className="ml-4 text-xl font-semibold">{product.title}</p>
+                <div className="ml-4">
+                  <p className="text-xl font-semibold">{product.title}</p>
+                  <div className="flex flex-row gap-2">
+                    <p className="text-lg text-gray-500">${product.price.toFixed(2)}</p>
+                    <span className="text-lg text-gray-500">x{product.quantity}</span>
+                  </div>
+                </div>
               </div>
               <div className="flex items-center space-x-4">
-                <p className="text-lg">${product.price}</p>
+                <p className="text-lg">${(product.price * (product.quantity || 1)).toFixed(2)}</p>
                 <button
                   onClick={() => handleDeleteItem(index)}
                   className="text-red-500 hover:text-red-700"

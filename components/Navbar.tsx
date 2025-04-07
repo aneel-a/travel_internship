@@ -1,12 +1,26 @@
-"use client"; // Ensure this component is rendered on the client side
-
+"use client";
 import { NAV_LINKS } from "@/constants";
 import Image from "next/image";
 import Link from "next/link";
 import Button from "./Button";
-
+import { useState, useEffect } from "react";
 
 const Navbar = () => {
+  const [cartCount, setCartCount] = useState(0);
+
+  const updateCartCount = () => {
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    setCartCount(cart.length);
+  };
+
+  useEffect(() => {
+    updateCartCount(); // Load initial cart count
+    window.addEventListener("cartUpdated", updateCartCount); // Listen for updates
+
+    return () => {
+      window.removeEventListener("cartUpdated", updateCartCount); // Cleanup
+    };
+  }, []);
 
   return (
     <nav className="flexBetween max-container padding-container relative z-30 py-5">
@@ -27,22 +41,13 @@ const Navbar = () => {
       </ul>
 
       <div className="lg:flexCenter hidden">
-        <Button 
-          type="button" // Add the 'type' prop here
-          title="Login"
-          variant="btn_dark_green"
-        />
+        <Button type="button" title="Login" variant="btn_dark_green" />
       </div>
 
-      {/* Cart Button */}
+      {/* Cart Button with Live Count */}
       <div className="lg:flexCenter hidden relative">
-      {/*absolute path deko kina vanda 'cart' matra use garda product kai root thanyo cuz it was inside product/[title] Relative Path Issue: If you were to use href="cart", Next.js would treat it as a relative path, which would result in /product/cart, and that’s why you were seeing the 404 error.*/}
-        <Link href="/cart"> 
-        <Button 
-          type="button" // Add the 'type' prop here
-          title="Cart"
-          variant="btn_dark_green"
-        />        
+        <Link href="/cart">
+          <Button type="button" title={`Cart (${cartCount})`} variant="btn_dark_green" />
         </Link>
       </div>
 
