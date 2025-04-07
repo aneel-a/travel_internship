@@ -332,7 +332,7 @@ const ProductPage = () => {
               className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
               onClick={handleCancel}
             >
-              Cancel
+              Cancelled
             </button>
           </div>
         </form>
